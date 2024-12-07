@@ -1,0 +1,197 @@
+-- Membuat database
+create database perpustakaan_51422015;
+use perpustakaan_51422015;
+=========================================================================================================================================================================================
+--1 Membuat table data anggota
+create table data_anggota (
+	NPM_anggota varchar (10),
+	Nama_anggota varchar (50),
+	Jurusan_anggota varchar (50),
+	Alamat_anggota varchar (20),
+	Kategori_anggota varchar (15),
+	Tanggal_bergabung_anggota date
+);
+
+select * from data_anggota
+
+insert into data_anggota (NPM_anggota, Nama_anggota,Jurusan_anggota,Alamat_anggota,Kategori_anggota,Tanggal_bergabung_anggota) values 
+('inf2401', 'Reza Bayu',	'Informatika',		'JL. Lapan',		'Mahasiswa',	'2024-05-26'),
+('tme2301', 'Andi Surya',	'Teknik Mesin',		'JL. Merdeka',		'Mahasiswa',	'2023-12-10'),
+('dos2201', 'Maya Lestari', 'Ekonomi',			'JL. Raya',			'Dosen',		'2022-08-15'),
+('dos2101', 'Budi Pratama', 'Hukum',			'JL. Sukanegara',	'Dosen',		'2021-11-05'),
+('sta2001', 'Siti Aminah',	'Manajemen',		'JL. Cendana',		'Staf',			'2020-06-18'),
+('inf2402', 'Deni Wira',	'Informatika',		'JL. Anggrek',		'Mahasiswa',	'2024-09-10'),
+('dos2301', 'Rina Septiani','Sastra Indonesia', 'JL. Bunga',		'Dosen',		'2023-01-05'),
+('tin2302', 'Rizky Iqbal',	'Teknik Industri',	'JL. Kemuning',		'Mahasiswa',	'2024-03-22'),
+('sta2201', 'Nia Puspita',	'Desain Komunikasi','JL. Manggis',		'Staf',			'2022-07-30'),
+('dos2303', 'Joko Prasetyo','Teknik Elektro',	'JL. Melati',		'Dosen',		'2021-04-12');
+
+select * from data_anggota
+
+=========================================================================================================================================================================================
+
+-- Membuat table data buku
+create table data_buku (
+	ID_Buku varchar (5), 
+	Judul_Buku varchar (50),
+	Pengarang_Buku varchar (50),
+	Tahun_Terbit_Buku varchar (4),
+	Kategori_Buku varchar (15)
+);
+
+select * from data_buku
+
+insert into data_buku (ID_Buku, Judul_Buku, Pengarang_Buku, Tahun_Terbit_Buku, Kategori_Buku)values
+('B1', 'Pemrograman Python',				'John Doe',			'2020', 'Teknologi'),
+('B2', 'Basis Data',						'Jane Smith',		'2019', 'Teknologi'),
+('B3', 'Jaringan Komputer',					'Mark Lee',			'2021', 'Teknologi'),
+('B4', 'Algoritma dan Struktur Data',		'Alan Turing',		'2018', 'Teknologi'),
+('B5', 'Manajemen Proyek',					'Richard Brown',	'2020', 'Manajemen'),
+('B6', 'Hukum Perdagangan Internasional',	'Anita Kumar',		'2017', 'Hukum'),
+('B7', 'Matematika Diskrit',				'George White',		'2019', 'Teknologi'),
+('B8', 'Sistem Informasi Manajemen',		'David Lee',		'2022', 'Manajemen'),
+('B9', 'Pengantar Ekonomi',					'Sandra Miller',	'2020', 'Ekonomi'),
+('B10', 'Desain Komunikasi Visual',			'Thomas Green',		'2021', 'Desain');
+
+select * from data_buku
+
+========================================================================================================================================================================================
+
+-- Membuat Table Data Peminjaman
+create table data_peminjaman(
+	ID_Pinjaman varchar (5),
+	NPM_anggota varchar (10),
+	ID_Buku varchar (5),
+	Tanggal_Peminjaman date,
+	Tanggal_Pengembalian date
+);
+
+select * from data_peminjaman
+
+insert into data_peminjaman (ID_Pinjaman, NPM_anggota, ID_Buku, Tanggal_Peminjaman, Tanggal_Pengembalian) values
+('P1', 'inf2401', 'B1', '2024-1-12', '2024-1-17'),
+('P2', 'inf2401', 'B2', '2024-1-12', '2024-1-14'),
+('P3', 'sta2201', 'B6', '2024-3-12', '2024-3-12'),
+('P4', 'dos2201', 'B9', '2024-5-12', '2024-5-18'),
+('P5', 'inf2402', 'B1', '2024-5-12', '2024-5-13'),
+('P6', 'tin2302', 'B7', '2024-8-12', '2024-8-17');
+
+select * from data_peminjaman
+
+==========================================================================================================================================================================================
+
+--2 Validasi Input
+exec.sp_addmessage 50015, 16, 'Mohon maaf, Tanggal kembali lebih kecil dari tanggal pinjam. Silahkan perbaiki input Anda!', 'us_english', 'true'
+select * from sys.messages
+==========================================================================================================================================================================================
+--pembuatan raise error
+CREATE TRIGGER pinjam_alert
+ON data_peminjaman
+FOR INSERT
+AS
+BEGIN
+    DECLARE @Tanggal_Peminjaman DATE;
+    DECLARE @Tanggal_Pengembalian DATE;
+
+    -- Loop melalui setiap baris yang dimasukkan
+    IF EXISTS (
+        SELECT 1
+        FROM inserted
+        WHERE Tanggal_Pengembalian < Tanggal_Peminjaman
+    )
+    BEGIN
+        RAISERROR ('Mohon maaf, Tanggal kembali lebih kecil dari tanggal pinjam. Silahkan perbaiki input Anda!', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+
+==========================================================================================================================================================================================
+
+-- Uji Coba
+insert into data_peminjaman values
+('P8', 'inf2402', 'B2', '2024-1-16', '2024-1-13');
+select * from data_peminjaman;
+
+==========================================================================================================================================================================================
+
+-- Pembuatan table view 
+CREATE VIEW V_Data_Anggota AS
+SELECT 
+    A.NPM_Anggota AS NPM,
+    A.Nama_Anggota AS Nama,
+    A.Jurusan_Anggota AS Jurusan,
+    A.Kategori_Anggota AS Kategori,
+    ISNULL(COUNT(P.ID_Pinjaman), 0) AS Total_Pinjam
+FROM 
+    Data_Anggota A
+LEFT JOIN 
+    Data_Peminjaman P
+ON 
+    A.NPM_Anggota = P.NPM_Anggota
+GROUP BY 
+    A.NPM_Anggota, A.Nama_Anggota, A.Jurusan_Anggota, A.Kategori_Anggota;
+
+select * from V_Data_Anggota
+
+==========================================================================================================================================================================================
+
+-- 4
+SELECT 
+    B.ID_Buku,
+    B.Judul_Buku,
+    B.Kategori_Buku
+FROM 
+    Data_Buku B
+WHERE 
+    B.ID_Buku NOT IN (
+        SELECT DISTINCT P.ID_Buku 
+        FROM Data_Peminjaman P
+    );
+
+=========================================================================================================================================================================================
+
+--B Kepala Perpustakaan
+CREATE PROCEDURE CekKategoriPeminjaman
+AS
+BEGIN
+    -- Variabel untuk menyimpan jumlah peminjam per kategori
+    DECLARE @JumlahMahasiswa INT;
+    DECLARE @JumlahDosen INT;
+
+    -- Hitung jumlah anggota kategori Mahasiswa yang meminjam buku
+    SELECT 
+        @JumlahMahasiswa = COUNT(DISTINCT P.NPM_Anggota)
+    FROM 
+        Data_Peminjaman P
+    JOIN 
+        Data_Anggota A ON P.NPM_Anggota = A.NPM_Anggota
+    WHERE 
+        A.Kategori_Anggota = 'Mahasiswa';
+
+    -- Hitung jumlah anggota kategori Dosen yang meminjam buku
+    SELECT 
+        @JumlahDosen = COUNT(DISTINCT P.NPM_Anggota)
+    FROM 
+        Data_Peminjaman P
+    JOIN 
+        Data_Anggota A ON P.NPM_Anggota = A.NPM_Anggota
+    WHERE 
+        A.Kategori_Anggota = 'Dosen';
+
+    -- Kondisi untuk mengevaluasi hasil dan menampilkan pesan
+    IF @JumlahMahasiswa > 5
+    BEGIN
+        PRINT 'Banyak mahasiswa aktif meminjam buku';
+    END
+    ELSE IF @JumlahDosen > 2
+    BEGIN
+        PRINT 'Dosen aktif memanfaatkan fasilitas perpustakaan';
+    END
+    ELSE
+    BEGIN
+        PRINT 'Tidak ada kategori anggota yang memenuhi syarat peminjaman aktif';
+    END
+END;
+=========================================================================================================================================================================================
+exec CekKategoriPeminjaman
+
